@@ -1,0 +1,11 @@
+{
+  "best_params": {
+    "model": "logreg",
+    "penalty": "l1",
+    "class_weight": null,
+    "max_iter": 523,
+    "tol": 4.825886161221432e-05,
+    "C": 0.005829592153102733
+  },
+  "best_cv_auc": 0.6373707026985457
+}

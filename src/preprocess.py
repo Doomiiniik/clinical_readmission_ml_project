@@ -65,6 +65,9 @@ def engineer_features(df):
         df['number_emergency'] + 
         df['number_inpatient']
     )
+
+    df = df.drop(columns=[ 'number_outpatient', 'number_emergency', 'number_inpatient' ])
+
     return df
 
 
@@ -74,8 +77,7 @@ def scale_numeric_features(train_df, test_df):
     scaler = RobustScaler()
     numeric_cols = ['time_in_hospital', 'num_lab_procedures', 
                     'total_utilization','num_procedures','num_medications'
-                    ,'number_diagnoses','number_outpatient','number_emergency',
-                    'number_inpatient']
+                    ,'number_diagnoses','age_numeric']
     
    
    
@@ -136,7 +138,81 @@ def map_icd_codes(df):
     
     return df
 
+def remove_rare_onehots(df, rare_thresh=0.001, id_cols=None, drop_constant=True, save_path=None):
+    # drop columns with very rare distinct values, below rare_tresh
+    # id_cols -> columns than cant be delted
+    
+    if id_cols is None:
+        id_cols = []
+
+    df = df.copy()
+    n = len(df)
+
+    dropped = []
+
+    # delete constant colums
+    if drop_constant:
+        constant_cols = [c for c in df.columns if c not in id_cols and df[c].nunique(dropna=True) <= 1]
+        if constant_cols:
+            df.drop(columns=constant_cols, inplace=True)
+            # saved into dropped
+            dropped.extend(constant_cols)
+
+    # detecting bool-like kolumns
+    bool_like = []
+    for c in df.columns:
+        # ommit seelcted id columns
+        if c in id_cols:
+            continue
+        # delete nan
+        ser = df[c].dropna()
+        # if empty after dropna -> ommit
+        if ser.shape[0] == 0:
+            continue
+        uniques = set(ser.unique())
+
+        # accept ONLY {0,1} or {True,False} or {'0','1'}
+        if uniques.issubset({0,1}) or uniques.issubset({True,False}) or uniques.issubset({'0','1'}):
+            bool_like.append(c)
+
+    # count prevalence and drop columns with prevalence < rare treshold
+    if bool_like:
+        # convert to int detected columns
+        safe_int = df[bool_like].replace({True:1, False:0, '1':1, '0':0}).fillna(0).astype(int)
+        # percentage of distinct values
+        prevalence = safe_int.sum(axis=0) / float(n)
+        rare_cols = prevalence[prevalence < rare_thresh].index.tolist()
+        if rare_cols:
+            df.drop(columns=rare_cols, inplace=True)
+            dropped.extend(rare_cols)
+
+    # optional saving deleted columns
+    if save_path and dropped:
+        try:
+            p = Path(save_path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with open(p, "w") as f:
+                json.dump({"dropped": dropped}, f, indent=2)
+        except Exception:
+            pass
+
+    return df, dropped
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 '''
+
 def encode_no_down_steady_up(df, columns):
     
     # map values: No -> 0, Down -> 1, Steady -> 2, Up -> 3
@@ -214,8 +290,9 @@ if __name__ == "__main__":
 
     df = encode_no_down_steady_up_as_dummies(df, No_Down_Stedy_Up_Columns)
     df = encode_binary_columns(df, No_Yes_Ch_Columns)
+    df, _ = remove_rare_onehots(df)
+    df = pd.get_dummies(df, columns=['diag_1', 'diag_2', 'diag_3'], drop_first=True)
     
-    #saving preprocessed data
     
 
 

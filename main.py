@@ -11,7 +11,8 @@ from src.preprocess import (
     encode_categorical_features,  
     map_icd_codes,
     encode_no_down_steady_up_as_dummies,
-    encode_binary_columns
+    encode_binary_columns,
+    remove_rare_onehots
 )
 
 from src.train import  train_baseline, evaluate_model
@@ -27,7 +28,7 @@ def run_pipeline(data_path):
     df = binarize_target(df)
     df = engineer_features(df)
     df = encode_categorical_features(df)  
-    df = map_icd_codes(df)
+    
 
     No_Down_Stedy_Up_Columns= ['metformin','repaglinide','chlorpropamide','glimepiride'
          ,'acetohexamide', 'glipizide', 'glyburide', 'tolbutamide', 'pioglitazone'
@@ -43,9 +44,13 @@ def run_pipeline(data_path):
     
     df = map_icd_codes(df)
 
-    
+    df = pd.get_dummies(
+    df,
+    columns=['diag_1', 'diag_2', 'diag_3'],
+    drop_first=True
+    )
 
-    
+    df, _ = remove_rare_onehots(df)
     
     # split data using patient grouping to prevent identity leakage
     # patient number is the group identifier

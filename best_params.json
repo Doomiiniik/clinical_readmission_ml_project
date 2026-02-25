@@ -1,0 +1,9 @@
+{
+  "best_params": {
+    "C": 0.001264454325629246,
+    "solver": "saga",
+    "max_iter": 1671,
+    "class_weight": "balanced"
+  },
+  "best_cv_auc": 0.6477251634849651
+}

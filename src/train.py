@@ -13,6 +13,13 @@ def train_baseline(x_train, y_train):
     )
     
     model.fit(x_train, y_train)
+    import json
+
+    feature_cols = x_train.columns.tolist()
+
+    with open("models/feature_columns.json", "w") as f:
+     json.dump(feature_cols, f)
+
     return model
 
 def evaluate_model(model, x_test, y_test):

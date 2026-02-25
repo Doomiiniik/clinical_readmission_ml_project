@@ -92,32 +92,35 @@ def prepare_df(path: str) -> pd.DataFrame:
 ###############################################################
 
 def build_preprocessor(X: pd.DataFrame):
-    """Return ColumnTransformer that scales numeric columns only (dense path)."""
+    # return ColumnTransformer that scales numeric columns only (dense path)
     exclude = {'target', 'readmitted', 'patient_nbr', 'encounter_id'}
     numeric_cols = [c for c in X.select_dtypes(include=[np.number]).columns if c not in exclude]
 
     numeric_transformer = Pipeline(steps=[
+        #input missing val if still in data
         ("imputer", SimpleImputer(strategy="median")),
+        # robust scaler because of outliers
         ("scaler", RobustScaler())
     ])
 
     preprocessor = ColumnTransformer(transformers=[
         ("num", numeric_transformer, numeric_cols)
-    ], remainder="passthrough", sparse_threshold=0)
+    ], remainder="passthrough", sparse_threshold=0)  # we get dense matrix
 
     return preprocessor, numeric_cols
 
 
 def to_sparse_if_needed(X: pd.DataFrame, threshold: int = 800):
-    """Convert to CSR sparse matrix if number of columns exceeds threshold."""
+    # convert to CSR sparse matrix if number of columns exceeds threshold 
     if X.shape[1] > threshold:
         return sp.csr_matrix(X.values)
     return X
 
 
 def fit_and_score_model(model, X_train, y_train, X_val, y_val):
-    """Fit model and return AUC. Handles predict_proba/decision_function."""
+    # fit model and return AUC. Handles predict_proba/decision_function
     model.fit(X_train, y_train)
+    # chcecks if model has atribute predict_proba
     if hasattr(model, "predict_proba"):
         preds = model.predict_proba(X_val)[:, 1]
     else:
@@ -126,12 +129,12 @@ def fit_and_score_model(model, X_train, y_train, X_val, y_val):
 
 
 def objective(trial: optuna.trial.Trial, X, y, groups):
-    """
-    Optuna objective: GroupKFold CV and mean AUC.
-    - ensures l1_ratio only used with elasticnet
-    - uses saga solver for LogisticRegression
-    - uses early_stopping for SGDClassifier
-    """
+    
+    # Optuna objective: GroupKFold CV and mean AUC.
+    # - ensures l1_ratio only used with elasticnet
+    # - uses saga solver for LogisticRegression
+    # - uses early_stopping for SGDClassifier
+    
     model_choice = trial.suggest_categorical("model", ["logreg", "sgd"])
     penalty = trial.suggest_categorical("penalty", ["l2", "l1", "elasticnet"])
     class_weight = trial.suggest_categorical("class_weight", [None, "balanced"])

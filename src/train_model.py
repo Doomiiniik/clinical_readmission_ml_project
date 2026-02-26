@@ -1,10 +1,12 @@
 import pandas as pd
 import joblib
+import os
 from src.pipeline import preprocess_data, build_model
 from src.data_loader import split_data_clinically
-
+from src.preprocess import scale_numeric_features
 RAW_PATH = "data/raw/diabetic_data.csv"
 MODEL_PATH = "models/model.joblib"
+SCALER_PATH = "models/scaler.pkl"
 
 def train_and_save_model():
     # load raw data
@@ -20,6 +22,19 @@ def train_and_save_model():
         target_col="target",
         group_col="patient_nbr"
     )
+
+    
+    
+    #train_df, test_df, scaler = scale_numeric_features(train_df, test_df)
+    if os.path.exists(SCALER_PATH): 
+       scaler = joblib.load(SCALER_PATH)
+       from src.preprocess import transform_with_scaler 
+       train_df = transform_with_scaler(train_df, scaler) 
+       test_df = transform_with_scaler(test_df, scaler)
+    else:
+       train_df, test_df, scaler = scale_numeric_features(train_df, test_df)
+       joblib.dump(scaler, SCALER_PATH)
+
 
     # training data
     y_train = train_df["target"]

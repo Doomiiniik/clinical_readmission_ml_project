@@ -89,6 +89,53 @@ def scale_numeric_features(train_df, test_df):
 
 
 
+from sklearn.preprocessing import RobustScaler
+import joblib
+
+NUMERIC_COLS = [
+    "time_in_hospital",
+    "num_lab_procedures",
+    "num_procedures",
+    "num_medications",
+    "number_diagnoses",
+    "total_utilization",
+    "age_numeric"
+]
+
+def fit_scaler_on_train(train_df):
+    scaler = RobustScaler()
+    scaler.fit(train_df[NUMERIC_COLS])
+    return scaler
+
+def transform_with_scaler(df, scaler):
+    df_loc = df.copy()
+    df_loc[NUMERIC_COLS] = scaler.transform(df_loc[NUMERIC_COLS])
+    return df_loc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def map_icd_codes(df):
@@ -311,8 +358,19 @@ if __name__ == "__main__":
     )
     
     
-    train_df, test_df, scaler = scale_numeric_features(train_df, test_df)
+    #train_df, test_df, scaler = scale_numeric_features(train_df, test_df)
     
+
+    
+    scaler = fit_scaler_on_train(train_df)
+    train_df = transform_with_scaler(train_df, scaler)
+    test_df = transform_with_scaler(test_df, scaler)
+
+ 
+    joblib.dump(scaler, "./models/scaler.pkl")
+    print("scaler saved at models/scaler.pkl")
+
+
 
     print("\n=== Summary after preprocessing ===")
     print(train_df.head())

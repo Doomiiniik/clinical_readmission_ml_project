@@ -14,6 +14,7 @@ def train_and_save_model():
     df = preprocess_data(df)
 
     # split into train/test using your clinical grouping
+    # we DONT'T USE TEST DATA to train model
     train_df, test_df = split_data_clinically(
         df,
         target_col="target",
@@ -22,6 +23,7 @@ def train_and_save_model():
 
     # training data
     y_train = train_df["target"]
+    # drop columns connected with target to dont allow data leakage
     X_train = train_df.drop(columns=["target", "readmitted", "patient_nbr", "encounter_id"], errors="ignore")
 
     # build model with best_params.json

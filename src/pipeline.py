@@ -25,7 +25,7 @@ MODEL_PATH = Path("models/model.joblib")
 
 
 def preprocess_data(df):
-    """run the exact preprocessing steps from main.py"""
+    # exact preprocessing steps from main.py
 
     df = clean_missing_values(df)
     df = filter_eligible_population(df)
@@ -54,7 +54,7 @@ def preprocess_data(df):
 
 
 def build_model():
-    """create a logistic regression model from best_params.json"""
+    #create a logistic regression model from best_params.json
 
     with open(BEST_PARAMS_PATH, "r") as f:
         params = json.load(f)["best_params"]
@@ -67,12 +67,12 @@ def build_model():
 
 
 def build_pipeline():
-    """
-    returns a tuple (preprocess_function, model)
-    inference will call:
-        X = preprocess_function(df)
-        y = model.predict(X)
-    """
+    
+    #    returns a tuple (preprocess_function, model)
+    #    inference will call:
+    #    X = preprocess_function(df)
+    #    y = model.predict(X)
+    
 
     model = build_model()
 

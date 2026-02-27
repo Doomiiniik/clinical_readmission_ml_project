@@ -9,7 +9,7 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix
 )
-
+import os
 from src.pipeline import preprocess_data
 from src.data_loader import split_data_clinically
 from src.preprocess import transform_with_scaler
@@ -90,30 +90,10 @@ def evaluate_model():
 
 
 
+    # ensure plots directory exists
+    os.makedirs("plots", exist_ok=True)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    print("\n=== ROC-AUC ===")
-    print(roc_auc_score(y_test, y_proba))
-
-    print("\n=== Classification Report ===")
-    print(classification_report(y_test, y_pred_thresh))
-
-    print("\n=== Confusion Matrix ===")
-    print(confusion_matrix(y_test, y_pred_thresh))
-
-    
+    # === ROC Curve ===
     fpr, tpr, _ = roc_curve(y_test, y_proba)
     plt.figure(figsize=(6, 5))
     plt.plot(fpr, tpr, label="ROC curve")
@@ -122,18 +102,28 @@ def evaluate_model():
     plt.ylabel("True Positive Rate")
     plt.title("ROC Curve")
     plt.legend()
-    plt.show()
+
+    roc_path = "plots/roc_curve.png"
+    plt.savefig(roc_path, dpi=300, bbox_inches="tight")
+    plt.close()
+    print(f"ROC curve saved to: {roc_path}")
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
-    precision, recall, _ = precision_recall_curve(y_test, y_proba)
-    plt.figure(figsize=(6, 5))
-    plt.plot(recall, precision, label="PR curve")
-    plt.xlabel("Recall")
-    plt.ylabel("Precision")
-    plt.title("Precision-Recall Curve")
-    plt.legend()
-    plt.show()
-
 
 if __name__ == "__main__":
     evaluate_model()
